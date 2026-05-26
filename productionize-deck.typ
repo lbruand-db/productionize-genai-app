@@ -15,7 +15,7 @@
 #title-slide(
   title: [Productionizing a GenAI Report App],
   subtitle: [From POC to a platform your team owns],
-  author: [Lucas Bruand, Paolo Picello, Paolo Ferri — Databricks Solution Architects],
+  author: [Lucas Bruand & Paolo Picello — Solution Architects · Paolo Ferri — Account Manager],
   date: [May 2026],
 )
 
@@ -146,8 +146,6 @@
 // SLIDE 7 — End-user OBO authentication (Public Preview)
 // =========================================================================
 #content-slide(title: [End-user authentication — OBO])[
-  #dbrx-ribbon(label: "PUBLIC PREVIEW", color: dbrx-amber, text-color: dbrx-dark-navy)
-
   #grid(
     columns: (1.2fr, 1fr),
     column-gutter: 0.5cm,
@@ -168,6 +166,8 @@
       Source: #link("https://docs.databricks.com/aws/en/dev-tools/databricks-apps/auth")[Databricks docs — Add scopes to a Databricks App]
     ],
   )
+
+  #dbrx-ribbon(label: "PUBLIC PREVIEW", color: dbrx-amber, text-color: dbrx-dark-navy)
 ]
 
 // =========================================================================
@@ -285,7 +285,7 @@
       #text(size: 18pt, fill: dbrx-charcoal)[
         Lucas Bruand — Specialist Solution Architect \
         Paolo Picello — Solution Architect \
-        Paolo Ferri — Solution Architect \
+        Paolo Ferri — Account Manager \
         lucas.bruand\@databricks.com
       ]
     ]
