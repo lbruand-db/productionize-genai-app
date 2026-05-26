@@ -20,16 +20,16 @@
 )
 
 // --- Agenda ---
-#content-slide(title: [Agenda — 20 min])[
-  + Context — POC vs. Production #h(1fr) _1.5 min_
-  + Evaluation set #h(1fr) _2.5 min_
-  + Logging user interactions #h(1fr) _2.5 min_
-  + Cost tracking #h(1fr) _2.5 min_
-  + End-user authentication (OBO) #h(1fr) _2.5 min_
-  + End-user access (Entra + AIM) #h(1fr) _2 min_
-  + Sizing & pricing #h(1fr) _2 min_
-  + Caching #h(1fr) _2 min_
-  + Recap & next steps #h(1fr) _1.5 min_
+#content-slide(title: [Agenda])[
+  + Context — POC vs. Production
+  + Evaluation set
+  + Logging user interactions
+  + Cost tracking
+  + End-user authentication (OBO)
+  + End-user access (Entra + AIM)
+  + Sizing & pricing
+  + Caching
+  + Recap & next steps
 ]
 
 // =========================================================================
@@ -97,18 +97,26 @@
   title: [Logging user interactions],
   subtitle: [Every click and every AI call, queryable in SQL],
 )[
-  #set text(size: 22pt, fill: dbrx-charcoal)
+  #grid(
+    columns: (1fr, 1fr),
+    column-gutter: 0.5cm,
+    [
+      #set text(size: 18pt, fill: dbrx-charcoal)
+      *What we log* — request id, prompt id + version, user id (from OBO), tokens in / out, latency, route, thumbs feedback
 
-  *What we log* — request id, prompt id + version, user id (from OBO), tokens in / out, latency, route, thumbs feedback
+      #v(0.3cm)
+      *Hot path* — write to *Lakebase Postgres*: sub-10ms query latency, native ACID, no warehouse spin-up on every request
 
-  #v(0.3cm)
-  *Hot path* — write to *Lakebase Postgres*: sub-10ms query latency, native ACID, no warehouse spin-up on every request
-
-  #v(0.3cm)
-  *Cold path* — *Lakehouse Sync* replicates Postgres → UC managed Delta as SCD Type 2 — full history, no Debezium / Kafka to operate
-
-  #v(0.3cm)
-  *Analytics* — SQL warehouse + Lakeview dashboards on the synced Delta tables
+      #v(0.3cm)
+      *Cold path* — *Lakehouse Sync* replicates Postgres → UC managed Delta as SCD Type 2 — full history, no Debezium / Kafka to operate
+    ],
+    [
+      #image("assets/doc-lakebase-cdf.png", width: 100%)
+      #set text(size: 11pt, fill: dbrx-blue-gray, style: "italic")
+      #v(-0.2cm)
+      Source: Databricks docs — Lakehouse Sync (wal2delta)
+    ],
+  )
 ]
 
 // =========================================================================
@@ -119,15 +127,19 @@
   left-heading: [Per-user / per-feature attribution],
   right-heading: [Platform cost visibility],
 )[
+  #set text(size: 18pt, fill: dbrx-charcoal)
   - *MLflow Tracing* captures token counts per call (`llm.token_usage.input_tokens` / `output_tokens`)
   - Tag traces with user id, route, prompt version
   - Aggregate in a UC table for chargeback
   - Surface in a weekly Lakeview dashboard
 ][
-  - `system.billing.usage` for DBU consumption by SKU, workspace, custom tags
-  - Per-warehouse, per-app, per-job rollup
-  - Alert thresholds via *Databricks SQL alerts*
-  - Tokens cost lands on the FMAPI SKU — surface weekly so it doesn't surprise the business
+  #set text(size: 16pt, fill: dbrx-charcoal)
+  - `system.billing.usage` for DBU by SKU, workspace, custom tags
+  - Alert thresholds via Databricks SQL alerts
+  #v(0.2cm)
+  #image("assets/doc-usage-dashboard.png", width: 95%)
+  #set text(size: 10pt, fill: dbrx-blue-gray, style: "italic")
+  Source: Databricks docs — Usage dashboard
 ]
 
 // =========================================================================
@@ -136,15 +148,26 @@
 #content-slide(title: [End-user authentication — OBO])[
   #dbrx-ribbon(label: "PUBLIC PREVIEW", color: dbrx-amber, text-color: dbrx-dark-navy)
 
-  #set align(center)
-  #dbrx-mermaid("graph LR\nA[User] --> B[Entra SSO]\nB --> C[Databricks App]\nC --> T[x-forwarded-access-token]\nT --> D[Genie]\nT --> E[SQL Warehouse]\nT --> F[UC Volumes]\nclass A dbrxNavy\nclass B,C dbrxTeal\nclass T dbrxAmber\nclass D,E,F dbrxGreen")
+  #grid(
+    columns: (1.2fr, 1fr),
+    column-gutter: 0.5cm,
+    [
+      #set align(center)
+      #dbrx-mermaid("graph LR\nA[User] --> B[Entra SSO]\nB --> C[Databricks App]\nC --> T[x-forwarded-access-token]\nT --> D[Genie]\nT --> E[SQL Warehouse]\nT --> F[UC Volumes]\nclass A dbrxNavy\nclass B,C dbrxTeal\nclass T dbrxAmber\nclass D,E,F dbrxGreen")
 
-  #set align(left)
-  #set text(size: 18pt, fill: dbrx-charcoal)
-  #v(0.3cm)
-  - App SP is used *only* for static assets + shared cache
-  - Every data call uses the *user's* forwarded token — UC row/column security applies naturally
-  - App declares scopes at deploy: `sql`, `dashboards.genie`, `files.files`
+      #set align(left)
+      #set text(size: 15pt, fill: dbrx-charcoal)
+      #v(0.2cm)
+      - App SP only for static assets + shared cache
+      - Every data call uses *user's* forwarded token — UC row/column security applies naturally
+      - App declares scopes at deploy: `sql`, `dashboards.genie`, `files.files`
+    ],
+    [
+      #image("assets/doc-add-scopes.png", width: 100%)
+      #set text(size: 10pt, fill: dbrx-blue-gray, style: "italic")
+      Source: Databricks docs — Add scopes to a Databricks App
+    ],
+  )
 ]
 
 // =========================================================================
@@ -155,12 +178,17 @@
   left-heading: [Already in place],
   right-heading: [What that gives the app],
 )[
+  #set text(size: 18pt, fill: dbrx-charcoal)
   - *Entra ID* for SSO
   - *Databricks AIM* — Automatic Identity Management
   - Syncs users, groups, *nested groups*, service principals from Entra
   - No SCIM app, no Cloud Application Administrator role required
   - Default for accounts created after Aug 2025
+
+  #v(0.3cm)
+  #image("assets/doc-enable-aim.png", width: 80%)
 ][
+  #set text(size: 18pt, fill: dbrx-charcoal)
   - Entra groups directly grant UC + Apps permissions (account-level assets)
   - Group memberships refresh: 5 min (browser login) / 40 min (token auth)
   - JIT user provisioning — no pre-provisioning of new joiners
