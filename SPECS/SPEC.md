@@ -48,7 +48,7 @@ Patterns drawn from a prior production engagement (a 374-report weekly retail an
 - Use `box-slide` with 4 boxes — what's in the POC vs. what's missing
 - POC has: reports, app UI, AI insights
 - Missing: evaluation discipline, observability, cost visibility, end-user identity, caching, sizing budget, access workflow
-- One-liner framing: *"The hard part isn't building it once — it's running it for many users on Monday morning."*
+- One-liner framing: *"The hard part isn't building it once — it's running it reliably for many users, every week."*
 
 ### Slide 4 — Evaluation set
 
@@ -165,5 +165,8 @@ Deck file will live at repo root as `productionize-deck.typ` (import `dbrx.typ`)
 ## Open questions for the user
 
 - Should the recap propose a concrete *next-meeting* date (e.g., the sizing review), or leave it as "to be scheduled"?
+ leave it as to be secheduled
 - Is FMAPI the assumed model gateway, or does the customer want options (Azure OpenAI via External Models, BYO endpoint)?
+ no other options
 - Is Lakebase already provisioned in their workspace, or is this a new ask to budget for?
+ I don't know leave this out
