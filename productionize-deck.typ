@@ -114,7 +114,7 @@
       #image("assets/doc-lakebase-cdf.png", width: 100%)
       #set text(size: 11pt, fill: dbrx-blue-gray, style: "italic")
       #v(-0.2cm)
-      Source: Databricks docs — Lakehouse Sync (wal2delta)
+      Source: #link("https://docs.databricks.com/aws/en/oltp/projects/lakehouse-sync")[Databricks docs — Lakehouse Sync (wal2delta)]
     ],
   )
 ]
@@ -139,7 +139,7 @@
   #v(0.2cm)
   #image("assets/doc-usage-dashboard.png", width: 95%)
   #set text(size: 10pt, fill: dbrx-blue-gray, style: "italic")
-  Source: Databricks docs — Usage dashboard
+  Source: #link("https://docs.databricks.com/aws/en/admin/account-settings/usage")[Databricks docs — Usage dashboard]
 ]
 
 // =========================================================================
@@ -165,7 +165,7 @@
     [
       #image("assets/doc-add-scopes.png", width: 100%)
       #set text(size: 10pt, fill: dbrx-blue-gray, style: "italic")
-      Source: Databricks docs — Add scopes to a Databricks App
+      Source: #link("https://docs.databricks.com/aws/en/dev-tools/databricks-apps/auth")[Databricks docs — Add scopes to a Databricks App]
     ],
   )
 ]
@@ -186,7 +186,9 @@
   - Default for accounts created after Aug 2025
 
   #v(0.3cm)
-  #image("assets/doc-enable-aim.png", width: 80%)
+  #image("assets/doc-enable-aim.png", width: 75%)
+  #set text(size: 9pt, fill: dbrx-blue-gray, style: "italic")
+  Source: #link("https://learn.microsoft.com/en-us/azure/databricks/admin/users-groups/automatic-identity-management/")[Databricks docs — Enable Automatic Identity Management]
 ][
   #set text(size: 18pt, fill: dbrx-charcoal)
   - Entra groups directly grant UC + Apps permissions (account-level assets)
