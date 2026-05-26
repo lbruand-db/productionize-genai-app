@@ -124,7 +124,7 @@ Patterns drawn from a prior production engagement (a 374-report weekly retail an
   - L1: per-worker in-memory LRU, no network hop, no cost
   - L2: UC Volume — persistent across restarts, shared across workers
   - Cache key: report id + prompt version (invalidates automatically on prompt bump)
-- Speaker note: AI cost on a 300+ report deck collapses by ~95% after the first generation; caching is non-optional at this scale
+- Speaker note: Control AI cost; caching is non-optional at this scale
 
 ### Slide 11 — Recap & next steps
 
