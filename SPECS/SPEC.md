@@ -22,7 +22,7 @@ Patterns drawn from a prior production engagement (a 374-report weekly retail an
 | 4 | Logging user interactions (Lakebase) | 2.5 | 7.5 |
 | 5 | Cost tracking | 2.5 | 10 |
 | 6 | End-user authentication (OBO) | 2.5 | 12.5 |
-| 7 | End-user access (Entra + AIM) | 2 | 14.5 |
+| 7 | End-user access (Entra + Databricks AIM) | 2 | 14.5 |
 | 8 | Sizing / pricing | 2 | 16.5 |
 | 9 | Caching | 2 | 18.5 |
 | 10 | Recap + next steps | 1.5 | 20 |
@@ -66,9 +66,9 @@ Patterns drawn from a prior production engagement (a 374-report weekly retail an
 - Subtitle: *"Every click and every AI call, queryable in SQL"*
 - Content split:
   - **What** — request/response, prompt id, user id (from OBO), tokens in/out, latency, thumbs feedback
-  - **Where** — Lakebase Postgres (low-latency writes from the app) → CDC to UC for analytics
-  - **Why Lakebase** — sub-10ms writes, transactional consistency, no warehouse hop on the hot path
-- Speaker note: contrast with writing straight to Delta (works but high write latency, no per-request isolation)
+  - **Where** — Lakebase Postgres (low-latency writes from the app) → **Lakehouse Sync** to UC managed Delta (SCD Type 2) for analytics
+  - **Why Lakebase** — sub-10ms query latency, native Postgres ACID, no warehouse hop on the hot path
+- Speaker note: contrast with writing straight to Delta (works but high write latency, no per-request isolation). Lakehouse Sync is the Databricks-native path — no Debezium / Kafka pipeline to operate.
 
 ### Slide 6 — Cost tracking
 
@@ -85,34 +85,35 @@ Patterns drawn from a prior production engagement (a 374-report weekly retail an
 
 ### Slide 7 — End-user OBO authentication
 
-- Use `content-slide` with a `dbrx-mermaid` flow
-- Mermaid: `User → Entra SSO → Databricks App → X-Forwarded-Access-Token → Genie / SQL / Volumes`
+- Use `content-slide` with a `dbrx-mermaid` flow + `dbrx-ribbon(label: "PUBLIC PREVIEW")`
+- Mermaid: `User → Entra SSO → Databricks App → x-forwarded-access-token → Genie / SQL / Volumes`
 - Key points:
   - App runs as a service principal **only** for static assets and shared cache
-  - Every data query uses the user's forwarded token (Genie space, SQL warehouse, UC Volumes)
+  - Every data query uses the user's forwarded token (Genie space, SQL warehouse, UC Volumes / Files)
+  - App declares **scopes** (`sql`, `dashboards.genie`, `files.files`) at deploy time
   - Row-level / column-level security in UC applies *naturally* — no app-level ACL code
-- Speaker note: this is the difference between "the app can see everything" and "the app can only see what the user can see"
+- Speaker note: this is the difference between "the app can see everything" and "the app can only see what the user can see". OBO is currently Public Preview — flag the maturity, GA path is on the roadmap.
 
-### Slide 8 — End-user access (Entra + AIM)
+### Slide 8 — End-user access (Entra + Databricks AIM)
 
 - Use `two-column-slide`
-- Left: *Already in place at customer*
-  - Entra (Azure AD) for SSO
-  - AIM (customer's identity provisioning) for group sync
-- Right: *What we wire into the app*
-  - Databricks Apps consume the SCIM-provisioned identity
-  - UC permissions managed via Entra groups → Databricks groups
-  - No new IdP, no new directory — reuse existing identity flow
-- Speaker note: customer keeps owning identity; Databricks consumes it
+- Left: *Already in place*
+  - Entra ID (Microsoft) for SSO
+  - **Databricks AIM** (Automatic Identity Management) — syncs Entra users, groups, **nested groups**, service principals into Databricks. No SCIM app, no admin role required.
+- Right: *What that gives the app*
+  - Entra groups directly grant UC + Apps permissions (account-level assets)
+  - Group memberships refresh on browser login (5 min) / token auth (40 min)
+  - JIT user provisioning on first login — no pre-provisioning needed
+- Speaker note: the customer's identity story is essentially **already production-grade**. Slide is a confirmation, not new work. AIM is the recommended path over SCIM (which is still supported as a fallback).
 
 ### Slide 9 — Sizing / pricing
 
 - Use `content-slide` with a `dbrx-table` of SKUs
-  - Databricks Apps compute (small / medium)
-  - Foundation Model API tokens (per prompt × users × frequency)
-  - SQL warehouse (serverless, on-demand for app queries)
-  - Lakebase (compute units for logging hot path)
-  - Storage (UC Volumes for reports + cache)
+  - **Databricks Apps compute** — Medium (2 vCPU / 6 GB / 0.5 DBU/h) default, Large (4 vCPU / 12 GB / 1 DBU/h) for high-concurrency
+  - **Foundation Model API** — pay-per-token (DBU-per-1M-tokens) for variable load; Provisioned Throughput for guaranteed capacity
+  - **SQL warehouse** — Serverless, on-demand for app queries
+  - **Lakebase** — Capacity Units for logging hot path
+  - **Storage** — UC Volumes for reports + cache (negligible)
 - Show a *concrete weekly envelope* example: e.g., "N users × M reports × K tokens = $X / week"
 - Reference Quicksizer / Lakemeter offer to refine
 
@@ -151,7 +152,7 @@ Patterns drawn from a prior production engagement (a 374-report weekly retail an
 
 - No customer name, no industry-specific KPIs from the reference engagement
 - No code blocks longer than 3 lines (this is a speaking deck, not a tutorial)
-- No "ROADMAP" pills — every pattern shown is GA today
+- No "ROADMAP" pills. Exception: OBO is Public Preview today — flag explicitly on slide 7, don't hide it.
 - No deep dives into MLflow internals; mention by name, move on
 
 ## Build
@@ -161,6 +162,20 @@ Patterns drawn from a prior production engagement (a 374-report weekly retail an
 ```
 
 Deck file will live at repo root as `productionize-deck.typ` (import `dbrx.typ`).
+
+## Verified against Databricks docs (2026-05-26)
+
+| Claim | Status | Source |
+|---|---|---|
+| MLflow Prompt Registry, aliases, LLM-as-judge scorers | ✅ GA | `docs.databricks.com/aws/en/mlflow3/genai/prompt-version-mgmt/prompt-registry/` |
+| MLflow traces capture token usage (`llm.token_usage.*`) | ✅ GA | `mlflow.org/docs/latest/genai/tracing/token-usage-cost/` |
+| `system.billing.usage` with SKU + custom_tags | ✅ GA | `docs.databricks.com/aws/en/admin/system-tables/billing` |
+| Lakebase Postgres, sub-10ms latency | ✅ GA | `databricks.com/blog/reverse-etl-lakebase-activate-your-lakehouse-data-operational-analytics` |
+| Lakehouse Sync (Postgres → UC Delta as SCD2) | ✅ GA | `docs.databricks.com/aws/en/oltp/projects/lakehouse-sync` |
+| OBO via `x-forwarded-access-token` header | ⚠️ Public Preview, opt-in, scopes required | `docs.databricks.com/aws/en/dev-tools/databricks-apps/auth` |
+| Databricks AIM (Automatic Identity Management) | ✅ GA, default for accounts created after 2025-08-01 | `learn.microsoft.com/en-us/azure/databricks/admin/users-groups/automatic-identity-management/` |
+| Databricks Apps sizes: Medium (0.5 DBU/h), Large (1 DBU/h) | ✅ GA — note: no "Small" tier exists | `docs.databricks.com/aws/en/dev-tools/databricks-apps/compute-size` |
+| FMAPI pay-per-token + Provisioned Throughput | ✅ GA | `databricks.com/product/pricing/foundation-model-serving` |
 
 ## Open questions for the user
 
